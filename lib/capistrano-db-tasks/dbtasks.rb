@@ -11,6 +11,7 @@ if Capistrano::Configuration.instance(false)
     instance.set :db_local_clean, false unless exists?(:db_local_clean)
     instance.set :assets_dir, 'system' unless exists?(:assets_dir)
     instance.set :local_assets_dir, 'public' unless exists?(:local_assets_dir)
+    instance.set :db_backup_dir, 'db/backups' unless exists?(:db_backup_dir)
 
     namespace :db do
       namespace :remote do
@@ -30,11 +31,21 @@ if Capistrano::Configuration.instance(false)
             Database.remote_to_local(instance)
           end
         end
+
+        desc 'Create a database backup remote database data'
+        task :backup, :roles => :db do
+          Database.backup_remote(instance)
+        end
       end
 
       desc 'Synchronize your local database using remote database data'
       task :pull do
         db.local.sync
+      end
+
+      desc 'Create a database backup remote database data'
+      task :backup do
+        db.local.backup
       end
 
       desc 'Synchronize your remote database using local database data'
