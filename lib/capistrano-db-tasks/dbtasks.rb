@@ -11,12 +11,15 @@ if Capistrano::Configuration.instance(false)
     instance.set :db_local_clean, false unless exists?(:db_local_clean)
     instance.set :assets_dir, 'system' unless exists?(:assets_dir)
     instance.set :local_assets_dir, 'public' unless exists?(:local_assets_dir)
+    instance.set :disallow_pushing, false unless exists?(:disallow_pushing)
     instance.set :db_backup_dir, 'db/backups' unless exists?(:db_backup_dir)
 
     namespace :db do
       namespace :remote do
         desc 'Synchronize your remote database using local database data'
         task :sync, :roles => :db do
+          raise "pushing is disabled, set disallow_pushing to false to carry out this operation" if fetch(:disallow_pushing)
+
           if Util.prompt 'Are you sure you want to REPLACE THE REMOTE DATABASE with local database'
             Database.local_to_remote(instance)
           end
@@ -58,6 +61,8 @@ if Capistrano::Configuration.instance(false)
       namespace :remote do
         desc 'Synchronize your remote assets using local assets'
         task :sync, :roles => :app do
+          raise "pushing is disabled, set disallow_pushing to false to carry out this operation" if fetch(:disallow_pushing)
+
           puts "Assets directories: #{assets_dir}"
           if Util.prompt "Are you sure you want to erase your server assets with local assets"
             Asset.local_to_remote(instance)
